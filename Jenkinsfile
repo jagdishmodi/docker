@@ -1,5 +1,8 @@
 node {
     def app
+    environment {
+        APP_NAME = "jagdish1983/test"
+    }
 
     stage('Clone repository') {
       
