@@ -1,5 +1,5 @@
-node {
-    def app
+pipeline  {
+    agent any
     environment {
         APP_NAME = "jagdish1983/test"
     }
@@ -29,7 +29,7 @@ node {
             app.push("latest")
         }
     }
-stage('Scan Docker Image') {
+    stage('Scan Docker Image') {
             steps {
                 script {
                     // Run Trivy to scan the Docker image
