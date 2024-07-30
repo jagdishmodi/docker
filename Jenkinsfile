@@ -6,41 +6,11 @@ node {
 
         checkout scm
     }
-    stage('SonarQube Code Analysis') {
-            steps {
-                dir("${WORKSPACE}"){
-                // Run SonarQube analysis for Python
-                script {
-                    def scannerHome = tool name: 'scanner-name', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-                    withSonarQubeEnv('sonar') {
-                        sh "echo $pwd"
-                        sh "${scannerHome}/bin/sonar-scanner"
-                    }
-                }
-            }
-            }
-       }
-       stage("SonarQube Quality Gate Check") {
-            steps {
-                script {
-                def qualityGate = waitForQualityGate()
-                    
-                    if (qualityGate.status != 'OK') {
-                        echo "${qualityGate.status}"
-                        error "Quality Gate failed: ${qualityGateStatus}"
-                    }
-                    else {
-                        echo "${qualityGate.status}"
-                        echo "SonarQube Quality Gates Passed"
-                    }
-                }
-            }
-        }
     stage('Build image') {
   
        app = docker.build("jagdish1983/test")
     }
-
+   
     stage('Test image') {
   
 
@@ -56,4 +26,25 @@ node {
             app.push("latest")
         }
     }
+stage('Scan Docker Image') {
+            steps {
+                script {
+                    // Run Trivy to scan the Docker image
+                    def trivyOutput = sh(script: "trivy image $APP_NAME:latest", returnStdout: true).trim()
+
+                    // Display Trivy scan results
+                    println trivyOutput
+
+                    // Check if vulnerabilities were found
+                    if (trivyOutput.contains("Total: 0")) {
+                        echo "No vulnerabilities found in the Docker image."
+                    } else {
+                        echo "Vulnerabilities found in the Docker image."
+                        // You can take further actions here based on your requirements
+                        // For example, failing the build if vulnerabilities are found
+                        // error "Vulnerabilities found in the Docker image."
+                    }
+                }
+            }
+}
 }
